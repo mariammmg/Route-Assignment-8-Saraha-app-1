@@ -12,3 +12,17 @@ export function toMs(time, unit) {
             return 0;
     }
 }
+export function toSeconds(time, unit) {
+    switch (unit) {
+        case 's':
+            return time;
+        case 'm':
+            return time * 60;
+        case 'h':
+            return time * 60 * 60;
+        case 'd':
+            return time * 24 * 60 * 60;
+        default:
+            return 0;
+    }
+}

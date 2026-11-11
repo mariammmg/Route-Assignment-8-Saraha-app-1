@@ -1,9 +1,10 @@
 import * as userRepo from "../User/user.repository.js";
 import { sendMail } from "../../common/email/nodemailer.js";
 import * as authRepo from "./auth.repository.js"
-import { toMs } from "../../common/utils/time.js";
+import { toMs,toSeconds } from "../../common/utils/time.js";
 import bcrypt from "bcryptjs";
 import crypto from 'node:crypto'
+import jwt from "jsonwebtoken";
 export async function register(userName,email,password){
     const user = await userRepo.findUserByemail(email)
     
@@ -49,4 +50,25 @@ const user = await userRepo.findUserByemail(email)
     const code =crypto.randomInt(100000,999999)
     await authRepo.createOtp(code,user._id,new Date(  Date.now()+ toMs(5,'m')))
     await sendMail(email,"Verfiy account",`<h3>your code is ${code}<h3>`)
+}
+export async function login(email,password){
+    const user = await userRepo.findUserByemail(email)
+
+    if(!user){
+        throw new Error("User not found")
+    }
+    if(!user.isVerified){
+        throw new Error("Please verify your account")
+    }
+    const isMatch = await bcrypt.compare(password,user.password)
+    if(!isMatch){
+        throw new Error("Invalid password")
+    }
+    const payload={
+        name:user.userName,
+        email:user.email,
+        id:user._id
+    }
+    const token = jwt.sign(payload,'8f3a9c2d7e1b4f6a0c5d8e9f2a1b7c4d',{expiresIn:toSeconds(1,'h')})
+    return token
 }
